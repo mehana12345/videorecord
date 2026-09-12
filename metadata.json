@@ -1,0 +1,7 @@
+{
+  "name": "LiveClass – Live Online Classes with Automatic Recording",
+  "description": "Comprehensive live online classroom platform featuring WebRTC video calling, automated cloud recording, role-based dashboards for students, faculty, and administrators, and a recorded lecture archive.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
