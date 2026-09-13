@@ -145,7 +145,7 @@ export const api = {
     return handleResponse(res);
   },
 
-  async endLiveClass(classId: string): Promise<{ message: string; status: string }> {
+  async endLiveClass(classId: string): Promise<{ message: string; status: string; recordingId?: string }> {
     const res = await fetch(`${API_BASE}/classes/${classId}/end-live`, {
       method: 'POST',
       headers: getHeaders(),

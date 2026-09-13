@@ -24,7 +24,7 @@ export class LiveClassRTC {
   public onPeerLeft?: (socketId: string) => void;
   public onParticipantsUpdate?: (participants: ParticipantInfo[]) => void;
   public onChatMessage?: (msg: ChatMessage) => void;
-  public onClassEnded?: (data: { message: string }) => void;
+  public onClassEnded?: (data: { message: string; classId?: string; recordingId?: string }) => void;
   public onRecordingStateChange?: (isRecording: boolean, durationSeconds: number) => void;
   public onModerated?: (action: string) => void;
 

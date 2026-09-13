@@ -101,18 +101,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         </div>
       </div>
 
-      {/* ACTIVE LIVE CLASSES HERO SECTION */}
-      {liveClasses.length > 0 && (
+      {/* ACTIVE LIVE CLASSES SECTION */}
+      {liveClasses.length > 0 ? (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-rose-500 animate-ping" />
               <h2 className="text-lg font-bold text-white tracking-tight">
-                Live Right Now ({liveClasses.length})
+                Live Class Available Now ({liveClasses.length})
               </h2>
             </div>
-            <span className="text-xs text-rose-400 font-semibold bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20">
-              Active Lecture in Progress
+            <span className="text-xs text-rose-400 font-semibold bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              Available to Join Live
             </span>
           </div>
 
@@ -168,6 +169,22 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             ))}
           </div>
         </section>
+      ) : (
+        <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3 text-xs text-slate-400">
+            <div className="w-2.5 h-2.5 rounded-full bg-slate-600" />
+            <span>
+              <strong>Live Classes:</strong> In this app, only active live classes can be joined live. When a faculty member starts a class, it will appear here immediately. After the live class ends, that lecture is automatically converted into a recording.
+            </span>
+          </div>
+          <button
+            onClick={() => onNavigateTab('recordings')}
+            className="shrink-0 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors flex items-center gap-1.5"
+          >
+            <Film className="w-3.5 h-3.5 text-amber-400" />
+            Browse Recorded Classes
+          </button>
+        </div>
       )}
 
       {/* Upcoming Scheduled Classes & Timetable */}

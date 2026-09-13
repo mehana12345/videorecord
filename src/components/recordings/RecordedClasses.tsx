@@ -70,7 +70,7 @@ export const RecordedClasses: React.FC<RecordedClassesProps> = ({
 
   useEffect(() => {
     if (initialRecordingId && recordings.length > 0) {
-      const found = recordings.find((r) => r.id === initialRecordingId);
+      const found = recordings.find((r) => r.id === initialRecordingId || r.classId === initialRecordingId);
       if (found) {
         handleOpenPlayer(found);
       }

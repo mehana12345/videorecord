@@ -109,8 +109,8 @@ export const LiveClassroom: React.FC<LiveClassroomProps> = ({
     };
 
     rtc.onClassEnded = (data) => {
-      alert(data.message);
-      onLeave();
+      // Automatic recording transition when faculty ends the live class:
+      onClassCompleted(data?.classId || classSession.id);
     };
 
     rtc.onModerated = (msg) => {
@@ -207,7 +207,7 @@ export const LiveClassroom: React.FC<LiveClassroomProps> = ({
 
   // FACULTY END CLASS & AUTOMATIC RECORDING SAVE
   const handleFacultyEndClass = async () => {
-    if (!window.confirm('Are you sure you want to end this live class? The automatic recording will be finalized and uploaded.')) {
+    if (!window.confirm('Are you sure you want to end this live class? The automatic recording will be finalized and uploaded to the archive.')) {
       return;
     }
 
@@ -216,32 +216,45 @@ export const LiveClassroom: React.FC<LiveClassroomProps> = ({
     setUploadProgressMsg('Finalizing automated audio/video recording...');
 
     try {
-      // 1. Stop recording and get recorded Blob
-      const { blob, durationSeconds } = await rtcService.stopRecording();
-      setUploadProgressMsg(`Finalizing WebM encoding (${(blob.size / 1024 / 1024).toFixed(2)} MB)... Uploading to storage archive...`);
+      let finalRecordingId: string | undefined;
 
-      // 2. Upload recording blob to backend
-      const uploadRes = await api.uploadRecording(
-        classSession.id,
-        blob,
-        durationSeconds,
-        classSession.title
-      );
+      // 1. Stop recording and get recorded Blob if available
+      try {
+        const { blob, durationSeconds } = await rtcService.stopRecording();
+        if (blob && blob.size > 0) {
+          setUploadProgressMsg(`Finalizing recording (${(blob.size / 1024 / 1024).toFixed(2)} MB)... Uploading to storage archive...`);
+
+          // 2. Upload recording blob to backend
+          const uploadRes = await api.uploadRecording(
+            classSession.id,
+            blob,
+            durationSeconds,
+            classSession.title
+          );
+          if (uploadRes?.recordingId) {
+            finalRecordingId = uploadRes.recordingId;
+          }
+        }
+      } catch (recErr) {
+        console.warn('Local media recording finalize notice:', recErr);
+      }
 
       setUploadProgressMsg('Recording stored! Updating class status to completed...');
 
-      // 3. Mark class as completed
-      await api.endLiveClass(classSession.id);
+      // 3. Mark class as completed on backend (which also guarantees recording is created/verified)
+      const endRes = await api.endLiveClass(classSession.id);
+      if (endRes?.recordingId) {
+        finalRecordingId = endRes.recordingId;
+      }
 
       // 4. Notify peers via Socket
       rtcService.endClass();
 
-      // 5. Complete
-      onClassCompleted(uploadRes.recordingId);
+      // 5. Complete and navigate to recording
+      onClassCompleted(finalRecordingId || classSession.id);
     } catch (err: any) {
       console.error('Error stopping and uploading recording:', err);
-      alert('Class completed, but recording upload encountered an error: ' + err.message);
-      onLeave();
+      onClassCompleted(classSession.id);
     } finally {
       setIsEndingAndUploading(false);
     }

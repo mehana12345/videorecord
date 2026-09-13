@@ -165,30 +165,40 @@ router.post('/upload', authenticate, upload.single('video') as any, async (req: 
       fileSize = stored.size;
     }
 
-    const recId = 'rec-' + Date.now();
+    const existingRec = queryOne<any>('SELECT id FROM recordings WHERE class_id = ?', [classId]);
+    const recId = existingRec?.id || 'rec-' + Date.now();
     const recordedAt = new Date().toISOString();
     const thumbnailUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80';
 
-    execute(
-      `INSERT INTO recordings (
-        id, class_id, title, subject, faculty_name, faculty_id, department,
-        duration_seconds, video_url, thumbnail_url, file_size, recorded_at, views_count
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
-      [
-        recId,
-        classId,
-        recTitle,
-        subject,
-        facultyName,
-        facultyId,
-        department,
-        duration,
-        videoUrl,
-        thumbnailUrl,
-        fileSize,
-        recordedAt,
-      ]
-    );
+    if (existingRec) {
+      execute(
+        `UPDATE recordings SET 
+          title = ?, video_url = ?, file_size = ?, duration_seconds = ?, recorded_at = ?
+         WHERE id = ?`,
+        [recTitle, videoUrl, fileSize, duration, recordedAt, recId]
+      );
+    } else {
+      execute(
+        `INSERT INTO recordings (
+          id, class_id, title, subject, faculty_name, faculty_id, department,
+          duration_seconds, video_url, thumbnail_url, file_size, recorded_at, views_count
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+        [
+          recId,
+          classId,
+          recTitle,
+          subject,
+          facultyName,
+          facultyId,
+          department,
+          duration,
+          videoUrl,
+          thumbnailUrl,
+          fileSize,
+          recordedAt,
+        ]
+      );
+    }
 
     // Update live_sessions with recording_id
     execute('UPDATE live_sessions SET recording_id = ? WHERE class_id = ?', [recId, classId]);

@@ -174,8 +174,9 @@ export const ClassSchedule: React.FC<ClassScheduleProps> = ({
                       Start Class Now
                     </button>
                   ) : (
-                    <span className="text-xs text-slate-500 font-medium px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-800">
-                      Starts at {cls.startTime}
+                    <span className="text-xs text-slate-400 font-medium px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-800 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                      Available when Live • Starts at {cls.startTime}
                     </span>
                   )
                 ) : (

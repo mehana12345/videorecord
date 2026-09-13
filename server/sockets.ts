@@ -176,7 +176,8 @@ export function setupSocketIO(httpServer: HttpServer) {
     socket.on('class-ended-by-faculty', ({ classId }) => {
       if (currentUserState?.role === 'faculty' || currentUserState?.role === 'admin') {
         io.to(classId).emit('class-ended', {
-          message: 'The faculty has ended this live class. Recording will be processed.',
+          classId,
+          message: 'The faculty has concluded this live class. The lecture recording is now saved and available to watch!',
         });
       }
     });

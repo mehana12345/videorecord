@@ -21,6 +21,15 @@ function MainApp() {
   const handleJoinLiveClass = async (classId: string) => {
     try {
       const res = await api.getClassById(classId);
+      if (res.class.status === 'completed') {
+        // If class is already completed, immediately route to its recording
+        handleWatchRecording(res.class.recording?.id || res.class.id);
+        return;
+      }
+      if (res.class.status !== 'live' && user?.role === 'student') {
+        alert(`This class is not live right now (Status: ${res.class.status}). Only active live classes can be joined. When the instructor starts the lecture, it will be available to join.`);
+        return;
+      }
       setActiveLiveClass(res.class);
     } catch (err) {
       console.error('Failed to join live class:', err);
@@ -42,10 +51,8 @@ function MainApp() {
     setActiveLiveClass(null);
     if (recordingId) {
       setTargetRecordingId(recordingId);
-      setCurrentTab('recordings');
-    } else {
-      setCurrentTab('dashboard');
     }
+    setCurrentTab('recordings');
   };
 
   if (isLoading) {

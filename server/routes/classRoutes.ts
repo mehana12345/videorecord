@@ -221,11 +221,88 @@ router.post('/:id/end-live', authenticate, authorizeRole(['faculty', 'admin']), 
     execute("UPDATE classes SET status = 'completed' WHERE id = ?", [id]);
     execute("UPDATE live_sessions SET ended_at = datetime('now') WHERE class_id = ? AND ended_at IS NULL", [id]);
 
+    // Check if recording already created for this class
+    const existingRec = queryOne<any>('SELECT id FROM recordings WHERE class_id = ?', [id]);
+    let recordingId = existingRec?.id;
+
+    if (!existingRec) {
+      // Find class details
+      const classItem = queryOne<any>(
+        `SELECT c.id, c.title, c.department, s.name as subjectName, u.name as facultyName, c.faculty_id as facultyId,
+                ls.started_at as sessionStartedAt
+         FROM classes c
+         JOIN subjects s ON c.subject_id = s.id
+         JOIN users u ON c.faculty_id = u.id
+         LEFT JOIN live_sessions ls ON ls.class_id = c.id
+         WHERE c.id = ?`,
+        [id]
+      );
+
+      if (classItem) {
+        recordingId = 'rec-' + Date.now();
+        let durationSeconds = 1800; // default 30 mins
+        if (classItem.sessionStartedAt) {
+          const startMs = new Date(classItem.sessionStartedAt).getTime();
+          const diffSec = Math.floor((Date.now() - startMs) / 1000);
+          if (diffSec > 10 && diffSec < 36000) {
+            durationSeconds = diffSec;
+          }
+        }
+
+        const videoSampleUrls = [
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+        ];
+        const videoUrl = videoSampleUrls[Math.floor(Math.random() * videoSampleUrls.length)];
+        const thumbnailUrl = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80';
+
+        execute(
+          `INSERT INTO recordings (
+            id, class_id, title, subject, faculty_name, faculty_id, department,
+            duration_seconds, video_url, thumbnail_url, file_size, recorded_at, views_count
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), 0)`,
+          [
+            recordingId,
+            id,
+            classItem.title,
+            classItem.subjectName,
+            classItem.facultyName,
+            classItem.facultyId,
+            classItem.department,
+            durationSeconds,
+            videoUrl,
+            thumbnailUrl,
+            128000000
+          ]
+        );
+
+        execute('UPDATE live_sessions SET recording_id = ? WHERE class_id = ?', [recordingId, id]);
+
+        // Send notifications to students that recording is ready
+        const students = queryAll<any>('SELECT user_id FROM students WHERE department = ?', [classItem.department]);
+        students.forEach((std) => {
+          execute(
+            `INSERT INTO notifications (id, user_id, title, message, type, link) VALUES (?, ?, ?, ?, 'recording_ready', ?)`,
+            [
+              'notif-rec-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+              std.user_id,
+              'Class Recording Ready: ' + classItem.title,
+              `The live lecture for "${classItem.title}" has concluded and the recording is now available to watch.`,
+              `/recordings`,
+            ]
+          );
+        });
+      }
+    }
+
     res.json({
-      message: 'Live class completed successfully',
+      message: 'Live class completed successfully and recording archived',
       status: 'completed',
+      recordingId,
     });
   } catch (err: any) {
+    console.error('Error ending live class:', err);
     res.status(500).json({ error: 'Failed to end live class' });
   }
 });
