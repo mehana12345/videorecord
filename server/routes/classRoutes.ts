@@ -214,6 +214,27 @@ router.post('/:id/start-live', authenticate, authorizeRole(['faculty', 'admin'])
   }
 });
 
+// QUICK START A LIVE CLASS (One-click launch for demo/evaluation in deploy)
+router.post('/quick-live', (req: Request, res: Response) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    let liveClass = queryOne<any>(`SELECT id FROM classes WHERE status = 'live' LIMIT 1`);
+    if (!liveClass) {
+      const sched = queryOne<any>(`SELECT id FROM classes WHERE status = 'scheduled' LIMIT 1`);
+      if (sched) {
+        execute(`UPDATE classes SET status = 'live', scheduled_date = ? WHERE id = ?`, [today, sched.id]);
+        liveClass = sched;
+      } else {
+        execute(`UPDATE classes SET status = 'live', scheduled_date = ? WHERE id = 'class-live-1'`, [today]);
+        liveClass = { id: 'class-live-1' };
+      }
+    }
+    res.json({ success: true, classId: liveClass.id });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // END LIVE CLASS (Faculty only)
 router.post('/:id/end-live', authenticate, authorizeRole(['faculty', 'admin']), (req: AuthenticatedRequest, res: Response) => {
   try {

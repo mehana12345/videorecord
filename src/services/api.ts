@@ -145,6 +145,14 @@ export const api = {
     return handleResponse(res);
   },
 
+  async quickStartLive(): Promise<{ success: boolean; classId: string }> {
+    const res = await fetch(`${API_BASE}/classes/quick-live`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
+
   async endLiveClass(classId: string): Promise<{ message: string; status: string; recordingId?: string }> {
     const res = await fetch(`${API_BASE}/classes/${classId}/end-live`, {
       method: 'POST',

@@ -22,6 +22,7 @@ export function setupSocketIO(httpServer: HttpServer) {
       origin: '*',
       methods: ['GET', 'POST'],
     },
+    transports: ['websocket', 'polling'],
   });
 
   io.on('connection', (socket: Socket) => {

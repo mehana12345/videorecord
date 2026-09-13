@@ -1,6 +1,7 @@
 import express from 'express';
 import http from 'http';
 import path from 'path';
+import fs from 'fs';
 import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import { getDatabase } from './server/db.ts';
@@ -50,15 +51,18 @@ async function startServer() {
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/materials', materialRoutes);
 
-  // Vite middleware in dev or static files in production
-  if (process.env.NODE_ENV !== 'production') {
+  // Vite middleware in dev or pre-built static files in production
+  const distPath = path.join(process.cwd(), 'dist');
+  const hasBuiltDist = fs.existsSync(path.join(distPath, 'index.html'));
+  const isProduction = process.env.NODE_ENV === 'production' || (hasBuiltDist && !process.env.VITE_DEV_SERVER);
+
+  if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

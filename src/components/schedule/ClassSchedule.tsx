@@ -174,10 +174,21 @@ export const ClassSchedule: React.FC<ClassScheduleProps> = ({
                       Start Class Now
                     </button>
                   ) : (
-                    <span className="text-xs text-slate-400 font-medium px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-800 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                      Available when Live • Starts at {cls.startTime}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400 font-medium px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-800 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                        Available when Live • Starts at {cls.startTime}
+                      </span>
+                      {onStartLiveClass && (
+                        <button
+                          onClick={() => onStartLiveClass(cls)}
+                          className="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all cursor-pointer"
+                          title="Start this lecture in live mode for demo/testing"
+                        >
+                          Launch Live
+                        </button>
+                      )}
+                    </div>
                   )
                 ) : (
                   <button

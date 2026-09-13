@@ -126,23 +126,28 @@ export const LiveClassroom: React.FC<LiveClassroomProps> = ({
     }).catch(console.warn);
 
     // Acquire media and start
-    rtc.initLocalMedia().then((stream) => {
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-      rtc.connect();
+    rtc.initLocalMedia()
+      .then((stream) => {
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+        rtc.connect();
 
-      // AUTOMATIC RECORDING REQUIREMENT:
-      // When faculty starts a live class session, start recording automatically!
-      if (isFacultyOrAdmin) {
-        setTimeout(() => {
-          const started = rtc.startRecording();
-          if (started) {
-            setIsRecording(true);
-          }
-        }, 1500);
-      }
-    });
+        // AUTOMATIC RECORDING REQUIREMENT:
+        // When faculty starts a live class session, start recording automatically!
+        if (isFacultyOrAdmin) {
+          setTimeout(() => {
+            const started = rtc.startRecording();
+            if (started) {
+              setIsRecording(true);
+            }
+          }, 1500);
+        }
+      })
+      .catch((err) => {
+        console.warn('Local media acquire fallback triggered:', err);
+        rtc.connect();
+      });
 
     setRtcService(rtc);
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.tsx';
 import {
   Video,
+  Play,
   Bell,
   User as UserIcon,
   LogOut,
@@ -35,6 +36,38 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [activeLiveClass, setActiveLiveClass] = useState<{ id: string; title: string } | null>(null);
+
+  useEffect(() => {
+    checkLiveClass();
+    const interval = setInterval(checkLiveClass, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkLiveClass = async () => {
+    try {
+      const res = await api.getClasses();
+      const live = res.classes.find((c: any) => c.status === 'live');
+      if (live) {
+        setActiveLiveClass({ id: live.id, title: live.title });
+      } else {
+        setActiveLiveClass(null);
+      }
+    } catch {
+      // silent
+    }
+  };
+
+  const handleLaunchLive = async () => {
+    try {
+      const res = await api.quickStartLive();
+      if (res.classId && onJoinLiveClass) {
+        onJoinLiveClass(res.classId);
+      }
+    } catch (err) {
+      console.error('Failed to quick start live:', err);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -201,6 +234,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Action Items */}
         <div className="flex items-center gap-3">
+          {/* Active Live Class or Instant Launch Pill */}
+          {activeLiveClass ? (
+            <button
+              onClick={() => onJoinLiveClass && onJoinLiveClass(activeLiveClass.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold animate-pulse shadow-md shadow-rose-600/30 transition-all cursor-pointer hover:scale-105"
+              title={`Live now: ${activeLiveClass.title}`}
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              <Video className="w-3.5 h-3.5" />
+              <span>LIVE CLASS ACTIVE</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleLaunchLive}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-all cursor-pointer hover:scale-105"
+              title="Launch instant live demo class"
+            >
+              <Play className="w-3 h-3 fill-current text-indigo-400" />
+              <span>Go Live Demo</span>
+            </button>
+          )}
+
           {/* Notifications Dropdown */}
           <div className="relative">
             <button

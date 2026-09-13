@@ -57,6 +57,17 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     }
   };
 
+  const handleLaunchDemoClass = async () => {
+    try {
+      const res = await api.quickStartLive();
+      if (res.classId) {
+        await onJoinLiveClass(res.classId);
+      }
+    } catch (err) {
+      console.error('Failed to launch demo class:', err);
+    }
+  };
+
   const liveClasses = classes.filter((c) => c.status === 'live');
   const upcomingClasses = classes.filter((c) => c.status === 'scheduled');
 
@@ -170,20 +181,37 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
         </section>
       ) : (
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3 text-xs text-slate-400">
-            <div className="w-2.5 h-2.5 rounded-full bg-slate-600" />
-            <span>
-              <strong>Live Classes:</strong> In this app, only active live classes can be joined live. When a faculty member starts a class, it will appear here immediately. After the live class ends, that lecture is automatically converted into a recording.
-            </span>
+        <div className="rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/30 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+              <Video className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>No faculty lecture is currently live</span>
+                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-semibold border border-slate-700">Standby</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Students can only join classes when they go <strong>LIVE</strong>. Once ended, the class becomes an automatic recording. Click below to launch an active live demo lecture right now.
+              </p>
+            </div>
           </div>
-          <button
-            onClick={() => onNavigateTab('recordings')}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors flex items-center gap-1.5"
-          >
-            <Film className="w-3.5 h-3.5 text-amber-400" />
-            Browse Recorded Classes
-          </button>
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+            <button
+              onClick={handleLaunchDemoClass}
+              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all cursor-pointer hover:scale-105"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              Launch Live Class Now
+            </button>
+            <button
+              onClick={() => onNavigateTab('recordings')}
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors flex items-center gap-1.5"
+            >
+              <Film className="w-3.5 h-3.5 text-amber-400" />
+              Recordings
+            </button>
+          </div>
         </div>
       )}
 

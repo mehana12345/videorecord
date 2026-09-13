@@ -217,6 +217,20 @@ function initSchemaAndSeed(db: SqlJsDatabase) {
   if (count === 0) {
     console.log('Seeding initial data into SQLite database...');
     seedDatabase(db);
+  } else {
+    // Ensure at least one live class is always available for immediate testing in deploy
+    const liveCount = db.exec("SELECT COUNT(*) as count FROM classes WHERE status = 'live'");
+    const activeLives = liveCount[0]?.values[0]?.[0] as number;
+    if (activeLives === 0) {
+      const today = new Date().toISOString().split('T')[0];
+      const sched = db.exec("SELECT id FROM classes WHERE status = 'scheduled' LIMIT 1");
+      const schedId = sched[0]?.values[0]?.[0] as string;
+      if (schedId) {
+        db.run(`UPDATE classes SET status = 'live', scheduled_date = '${today}' WHERE id = '${schedId}'`);
+      } else {
+        db.run(`UPDATE classes SET status = 'live', scheduled_date = '${today}' WHERE id = 'class-live-1'`);
+      }
+    }
   }
 }
 

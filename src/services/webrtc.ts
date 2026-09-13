@@ -176,19 +176,29 @@ export class LiveClassRTC {
 
     const videoStream = canvas.captureStream(30);
 
-    // Create a silent audio track using Web Audio API to satisfy WebRTC audio transceivers
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    gain.gain.value = 0.001; // subtle audible tone so visualizers react
-    osc.connect(gain);
-    const dest = audioCtx.createMediaStreamDestination();
-    gain.connect(dest);
-    osc.start();
+    // Create audio track using Web Audio API safely
+    try {
+      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtxClass) {
+        const audioCtx = new AudioCtxClass();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.0001; // subtle audible tone so visualizers react
+        osc.connect(gain);
+        const dest = audioCtx.createMediaStreamDestination();
+        gain.connect(dest);
+        osc.start();
 
-    const audioTrack = dest.stream.getAudioTracks()[0];
-    if (audioTrack) {
-      videoStream.addTrack(audioTrack);
+        const audioTrack = dest.stream.getAudioTracks()[0];
+        if (audioTrack) {
+          videoStream.addTrack(audioTrack);
+        }
+      }
+    } catch (audioErr) {
+      console.warn('Virtual audio track generation notice:', audioErr);
     }
 
     return videoStream;
@@ -198,7 +208,11 @@ export class LiveClassRTC {
    * Connect to Socket.IO signaling server and join classroom room
    */
   connect(socketUrl: string = window.location.origin) {
-    this.socket = io(socketUrl);
+    this.socket = io(socketUrl, {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+      timeout: 10000,
+    });
 
     this.socket.on('connect', () => {
       console.log('Connected to signaling server with socket ID:', this.socket?.id);
