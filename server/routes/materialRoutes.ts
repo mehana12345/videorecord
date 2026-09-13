@@ -27,7 +27,7 @@ router.get('/class/:classId', (req, res) => {
 });
 
 // UPLOAD study material (Faculty/Admin)
-router.post('/upload', authenticate, upload.single('file'), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/upload', authenticate, upload.single('file') as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { classId, title } = req.body;
     const file = req.file;

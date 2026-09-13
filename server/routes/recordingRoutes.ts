@@ -125,7 +125,7 @@ router.get('/:id', (req: Request, res: Response) => {
 });
 
 // UPLOAD RECORDING (MediaRecorder Blob upload from faculty client when ending class)
-router.post('/upload', authenticate, upload.single('video'), async (req: AuthenticatedRequest, res: Response) => {
+router.post('/upload', authenticate, upload.single('video') as any, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { classId, title, durationSeconds } = req.body;
     const file = req.file;
